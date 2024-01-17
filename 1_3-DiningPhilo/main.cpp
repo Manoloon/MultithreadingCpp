@@ -9,23 +9,23 @@
 using namespace std::chrono_literals;
 
 constexpr int nFork = 5;
-constexpr int nPhilosofer = 5;
-std::array<std::string,5> names={ "A","B","C","D","E"};
+constexpr int nPhilosopher = 5;
+const std::array<std::string,5> names={ "A","B","C","D","E"};
 std::array<int,5> mouthfuls;
-const auto think_time = 2s;
-const auto eat_time = 1s;
+constexpr auto think_time = 2s;
+constexpr auto eat_time = 1s;
 std::array<std::mutex,5> fork_mutex;
 std::mutex print_mutex;
 
 // Iterate forks
-void print(int n,const std::string& str, int nFork) {
+void print(int n,const std::string& str, int n_Fork) {
     std::lock_guard print_lck(print_mutex);
-    std::cout << "Philosofer " << names[n] << str << nFork << std::endl;
+    std::cout << "Philosopher " << names[n] << str << n_Fork << std::endl;
 }
-// Philosofer states
+// Philosopher states
 void print(int n, const std::string& str){
     std::lock_guard print_lck(print_mutex);
-    std::cout << "Philosofer " << names[n] << str << std::endl;
+    std::cout << "Philosopher " << names[n] << str << std::endl;
 }
 
 void dine(int nPhilo){
@@ -60,15 +60,16 @@ void dine(int nPhilo){
 }
 int main() {
     std::vector<std::thread> threads;
-    for(int i = 0; i < nPhilosofer; i++){
+    threads.reserve(5);
+    for(int i = 0; i < nPhilosopher; i++){
         threads.push_back(std::move(std::thread{dine,i}));
     }
     for(std::thread& t : threads){
         t.join();
     }
 
-    for(int i = 0; i < nPhilosofer;i++){
-        std::cout << " Philosofer : " << names[i] << std::endl;
+    for(int i = 0; i < nPhilosopher; i++){
+        std::cout << " Philosopher : " << names[i] << std::endl;
         std::cout << " had : " << mouthfuls[i] << std::endl;
     }
     return 0;
