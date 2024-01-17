@@ -9,12 +9,12 @@
 using namespace std::chrono_literals;
 
 constexpr int nFork = 5;
-constexpr int nPhilosopher = 5;
-const std::array<std::string,5> names={ "A","B","C","D","E"};
-std::array<int,5> mouthfuls;
+constexpr int nPhilosopher = nFork;
+const std::array<std::string,nPhilosopher> names={ "A","B","C","D","E"};
+std::array<int,nPhilosopher> mouthfuls={0};
 constexpr auto think_time = 2s;
 constexpr auto eat_time = 1s;
-std::array<std::mutex,5> fork_mutex;
+std::array<std::mutex,nPhilosopher> fork_mutex;
 std::mutex print_mutex;
 
 // Iterate forks
@@ -38,13 +38,14 @@ void dine(int nPhilo){
     std::this_thread::sleep_for(think_time);
 
     print(nPhilo," reaches for Fork : ", lFork);
-    fork_mutex[lFork].lock();
+    std::scoped_lock multiLock(fork_mutex[lFork],fork_mutex[rFork]);
+    //fork_mutex[lFork].lock();
 
     print(nPhilo, " pick up fork : ", lFork);
     print(nPhilo," is Thinking...");
 
     std::this_thread::sleep_for(think_time);
-    fork_mutex[rFork].lock();
+    //fork_mutex[rFork].lock();
 
     print(nPhilo, " pick up fork : ", rFork);
     print(nPhilo," is eating...");
@@ -54,8 +55,8 @@ void dine(int nPhilo){
     print(nPhilo, " puts down the fork : ", rFork);
     print (nPhilo, " is thinking...");
 
-    fork_mutex[lFork].unlock();
-    fork_mutex[rFork].unlock();
+    //fork_mutex[lFork].unlock();
+    //fork_mutex[rFork].unlock();
     std::this_thread::sleep_for(think_time);
 }
 int main() {
@@ -68,9 +69,9 @@ int main() {
         t.join();
     }
 
-    for(int i = 0; i < nPhilosopher; i++){
-        std::cout << " Philosopher : " << names[i] << std::endl;
-        std::cout << " had : " << mouthfuls[i] << std::endl;
+    for(int i = 0; i < nPhilosopher; ++i){
+        std::cout << " Philosopher : " << names[i] << ": ";
+        std::cout << " had : " << mouthfuls[i] << " mouthfuls\n";
     }
     return 0;
 }
