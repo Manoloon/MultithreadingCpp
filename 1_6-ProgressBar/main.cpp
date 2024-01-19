@@ -1,7 +1,6 @@
 #include <iostream>
 #include <thread>
 #include <mutex>
-#include <chrono>
 #include <string>
 
 using namespace std::chrono_literals;
@@ -18,13 +17,13 @@ void FetchData(){
         std::cout << "Fetcher thread waiting for data" << std::endl;
         std::this_thread::sleep_for(2s);
 
-        std::lock_guard data_lck(data_mutex);
+        std::lock_guard<std::mutex> data_lck(data_mutex);
         sdata += "block " + std::to_string(i+1) + " ";
         std::cout << "sdata :" << sdata << std::endl;
         update_progress = true;
     }
     std::cout << "Fetch sdata completed" << std::endl;
-    std::lock_guard completed_lck(completed_mutex);
+    std::lock_guard<std::mutex> completed_lck(completed_mutex);
     completed = true;
 }
 
@@ -32,7 +31,7 @@ void ProgressBar(){
     size_t len = 0;
     while(true){
         std::cout << "Progress Bar waiting for Data" << std::endl;
-        std::unique_lock data_lck(data_mutex);
+        std::unique_lock<std::mutex> data_lck(data_mutex);
         while(!update_progress){
             data_lck.unlock();
             std::this_thread::sleep_for(10ms);
@@ -42,7 +41,7 @@ void ProgressBar(){
         update_progress = false;
         data_lck.unlock();
         std::cout << "Received : " << len << " bytes so far." << std::endl;
-        std::lock_guard complete_lck(completed_mutex);
+        std::lock_guard<std::mutex> complete_lck(completed_mutex);
         if(completed){
             std::cout << " progress bar completed" << std::endl;
             break;
@@ -52,14 +51,14 @@ void ProgressBar(){
 
 void ProcessData(){
     std::cout << "Processing Thread Data" << std::endl;
-    std::unique_lock complete_lck(completed_mutex);
+    std::unique_lock<std::mutex> complete_lck(completed_mutex);
     while (!completed){
         complete_lck.unlock();
         std::this_thread::sleep_for(10ms);
         complete_lck.lock();
     }
     complete_lck.unlock();
-    std::lock_guard data_lck(data_mutex);
+    std::lock_guard<std::mutex> data_lck(data_mutex);
     std::cout << "Processing Data " << std::endl;
 }
 
