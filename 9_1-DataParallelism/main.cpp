@@ -3,29 +3,25 @@
 #include <iostream>
 #include <thread>
 #include <future>
+#include <random>
+#include <algorithm>
+#include <numeric>
+#include "accumAsync.h"
+#include "accumPackagedTask.h"
 
-using namespace std::chrono_literals;
-std::mutex print_mut;
-void ProduceSum(std::promise<int>& sum,int a,int b){
-    int result = a + b;
-    std::this_thread::sleep_for(2s);
-    sum.set_value(result);
-}
-void ConsumeSum(std::shared_future<int>& fSum){
-    std::unique_lock print_lck(print_mut);
-    std::cout << "Waiting for future: " << std::endl;
-    int sum = fSum.get();
-    std::cout << "Future sum is here : " << sum << std::endl;
-}
+static std::mt19937 mt;
+std::uniform_real_distribution<double> dist(0,100);
+
 int main() {
-    std::promise<int> promise;
-    std::shared_future<int> fut = promise.get_future();
+    std::vector<double> vec(16);
+    std::iota(std::begin(vec),std::end(vec),1.0);
 
-    std::thread thrProd(ProduceSum,std::ref(promise),2,3);
+    std::vector<double> vecRand(10000);
+    std::generate(std::begin(vecRand),std::end(vecRand),[&vecRand](){return dist(mt);});
+    std::cout << "Using Async : sum the first 16 integers :" << asyncAccum::add_parallel(vec) << std::endl;
+    std::cout << "Using Async : sum 10000 random nums :" << asyncAccum::add_parallel(vecRand) << std::endl;
 
-    std::thread thrCons(ConsumeSum,std::ref(fut));
-    thrProd.join();
-    thrCons.join();
-
+    std::cout << "Using Packaged_task : sum the first 16 integers :" << accumPackagedTask::add_parallel(vec) << std::endl;
+    std::cout << "Using Packaged_task : sum 10000 random nums :" << accumPackagedTask::add_parallel(vecRand) << std::endl;
     return 0;
 }
