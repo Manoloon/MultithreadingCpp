@@ -16,5 +16,17 @@ namespace unseq{
         }
         std::cout << std::endl;
     }
+    void runAndFail(){
+        std::vector<int> vec(20'000);
+        int count =0;
+        try{
+            std::for_each(std::execution::unseq, vec.begin(), vec.end(),
+                          [&count] (int& x) { throw std::out_of_range("Out of range"); });
+        }
+        catch (std::exception& e){
+            std::cout << "************* Parallel Exception ****************" << '\n';
+            std::cout << "Exception caught : " << e.what() << std::endl;
+        }
+    }
 }
 #endif //INC_9_3_EXECUTIONPOLICIES_VECTORIZED_H
